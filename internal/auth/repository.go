@@ -18,6 +18,10 @@ type authRepository struct {
 	db *config.DB
 }
 
+func NewAuthRepository(db *config.DB) AuthRepository {
+	return &authRepository{db}
+}
+
 func (r *authRepository) GetUserByEmail(email string) (GetUserModel, error) {
 	var data GetUserModel
 	q := `SELECT id AS "user_id", name, email, profile_picture, password FROM "users" WHERE email = $<email>`
@@ -26,10 +30,6 @@ func (r *authRepository) GetUserByEmail(email string) (GetUserModel, error) {
 	}
 	customlog.PrintJSON(data, "data AING")
 	return data, nil
-}
-
-func NewAuthRepository(db *config.DB) AuthRepository {
-	return &authRepository{db}
 }
 
 func (r *authRepository) RegisterUser(body RegisterRequest) error {

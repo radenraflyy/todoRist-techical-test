@@ -5,6 +5,7 @@ import (
 	"todorist/config"
 	"todorist/server/middleware"
 	authrouter "todorist/server/router/auth_router"
+	todosrouter "todorist/server/router/todos_router"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,4 +30,5 @@ func SetupRoutes(c SetupRoutesConfig) {
 	})
 
 	authrouter.Init(apiV1, c.DB)
+	todosrouter.Init(apiV1, c.DB)
 }
