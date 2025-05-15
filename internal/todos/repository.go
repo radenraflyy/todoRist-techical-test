@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"todorist/config"
+	"todorist/pkg/customlog"
 )
 
 type TodosRepository interface {
@@ -13,6 +14,7 @@ type TodosRepository interface {
 	CreateComment(data CreateCommentRequest, todoId string) error
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
+	UpdateTodoMany(data UpdateTodoRequest) error
 }
 
 type todosRepository struct {
@@ -115,10 +117,19 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 
 	search := q.Search
 
+	customlog.PrintJSON(q, "filter")
 	wherearr := make([]string, 0)
 	wherearr = append(wherearr, "todos.user_id = $<user_id>")
-	wherearr = append(wherearr, "todos.is_done = false")
 	wherearr = append(wherearr, "todos.deleted_at IS NULL")
+	if q.Status != "" {
+		wherearr = append(wherearr, "todos.is_done = $<is_done>")
+	}
+	if q.Priority != "" {
+		wherearr = append(wherearr, "todos.priority = $<priority>")
+	}
+	if q.DueDate != "" {
+		wherearr = append(wherearr, "DATE(todos.due_date) = $<due_date>")
+	}
 
 	if search != "" {
 		wherearr = append(wherearr, `(LOWER(todos.title) LIKE LOWER($<search>) OR LOWER(todos.description) LIKE LOWER($<search>))`)
@@ -138,20 +149,24 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 		todos.is_done
 	FROM todos
 	WHERE %s
-	ORDER BY $<orderBy:raw> $<order:raw> NULLS LAST, todos.created_at ASC
+	ORDER BY $<orderBy:raw> $<order:raw>
 	LIMIT $<limit>
 	OFFSET $<offset>
 	`, wherestr)
 
 	params := map[string]interface{}{
-		"user_id": userId,
-		"search":  "%" + search + "%",
-		"orderBy": orderBy,
-		"order":   order,
-		"limit":   limit,
-		"offset":  offset,
+		"is_done":  q.Status,
+		"priority": q.Priority,
+		"due_date": q.DueDate,
+		"user_id":  userId,
+		"search":   "%" + search + "%",
+		"orderBy":  orderBy,
+		"order":    order,
+		"limit":    limit,
+		"offset":   offset,
 	}
 
+	log.Println("query:", query)
 	err := t.db.SelectMany(query, &data, params)
 	if err != nil {
 		log.Println("error getting all todos:", err)
@@ -159,4 +174,18 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 	}
 
 	return data, nil
+}
+
+func (t *todosRepository) UpdateTodoMany(data UpdateTodoRequest) error {
+	return t.db.Tx(func(tx *config.DB) error {
+		for _, id := range data.TodoId {
+			dataUpdate := struct {
+				IsDone bool `db:"is_done"`
+			}{data.IsDone}
+			if err := tx.Update(&dataUpdate, "todos", "id = $<id>", map[string]any{"id": id}, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

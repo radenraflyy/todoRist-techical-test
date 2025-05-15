@@ -1,6 +1,8 @@
 package todos
 
-import "todorist/config"
+import (
+	"todorist/config"
+)
 
 type Usecase interface {
 	CreateTodo(data CreateTodoRequest) error
@@ -8,6 +10,7 @@ type Usecase interface {
 	CreateComment(data CreateCommentRequest, todoId string) error
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
+	UpdateTodo(data UpdateTodoRequest) error
 }
 
 type useCase struct {
@@ -58,4 +61,11 @@ func (u *useCase) GetAllTodos(userId string, filter FilteringTodosRequest) ([]Ge
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (t *useCase) UpdateTodo(data UpdateTodoRequest) error {
+	if err := t.repo.UpdateTodoMany(data); err != nil {
+		return err
+	}
+	return nil
 }

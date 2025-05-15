@@ -3,6 +3,7 @@ package todos
 import (
 	"fmt"
 	"net/http"
+	"todorist/pkg/customlog"
 	"todorist/pkg/exception"
 	"todorist/utils"
 
@@ -18,6 +19,7 @@ type TodosController interface {
 	CreateComment(c *gin.Context)
 	GetAllLabels(c *gin.Context)
 	GetAllTodos(c *gin.Context)
+	UpdateTodo(c *gin.Context)
 }
 
 type todosController struct {
@@ -33,6 +35,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.POST("/comment/:todo_id", controller.CreateComment)
 	todoRouter.GET("/list-label", controller.GetAllLabels)
 	todoRouter.GET("/list-todo", controller.GetAllTodos)
+	todoRouter.PATCH("", controller.UpdateTodo)
 	return controller
 }
 
@@ -183,6 +186,8 @@ func (t *todosController) GetAllTodos(c *gin.Context) {
 		filter.Order = "desc"
 	}
 
+	customlog.PrintJSON(filter, "filter AING")
+
 	res, err := t.useCase.GetAllTodos(userId.(string), filter)
 	if err != nil {
 		c.Error(&exception.CustomException{
@@ -210,4 +215,37 @@ func (t *todosController) GetAllTodos(c *gin.Context) {
 	}
 
 	utils.SuccessWithData(c, http.StatusOK, data, "success get all todos")
+}
+
+func (t *todosController) UpdateTodo(c *gin.Context) {
+	var payload UpdateTodoRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.Error(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	validationErr := validate.Struct(payload)
+	if validationErr != nil {
+		var errors []string
+		for _, err := range validationErr.(validator.ValidationErrors) {
+			errors = append(errors, utils.CustomErrorMessage(err))
+		}
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", errors),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+	customlog.PrintJSON(payload, "payload AING")
+
+	err := t.useCase.UpdateTodo(payload)
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	utils.SuccessWithoutData(c, http.StatusOK, "success update todo")
 }

@@ -22,10 +22,18 @@ type (
 	}
 
 	FilteringTodosRequest struct {
-		OrderBy string `form:"order_by"`
-		Order   string `form:"order"`
-		Search  string `form:"search"`
-		Limit   int    `form:"limit"`
-		Offset  int    `form:"offset"`
+		Status   string `form:"status"`
+		Priority string `form:"priority"`
+		DueDate  string `form:"due_date"`
+		OrderBy  string `form:"order_by"`
+		Order    string `form:"order"`
+		Search   string `form:"search"`
+		Limit    int    `form:"limit"`
+		Offset   int    `form:"offset"`
+	}
+
+	UpdateTodoRequest struct {
+		TodoId []string `json:"id" db:"id"`
+		IsDone bool     `json:"is_done" db:"is_done"`
 	}
 )
