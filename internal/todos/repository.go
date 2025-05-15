@@ -127,6 +127,7 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 	query := fmt.Sprintf(`
 	SELECT
 		COUNT(*) OVER () AS count,
+		todos.id,
 		todos.title,
 		todos.description,
 		todos.created_at,

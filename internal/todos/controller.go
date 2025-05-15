@@ -174,7 +174,7 @@ func (t *todosController) GetAllTodos(c *gin.Context) {
 		filter.Limit = 5
 	}
 	if filter.Offset == 0 {
-		filter.Offset = 1
+		filter.Offset = 0
 	}
 	if filter.OrderBy == "" {
 		filter.OrderBy = "created_at"
@@ -205,8 +205,8 @@ func (t *todosController) GetAllTodos(c *gin.Context) {
 	}{
 		Items:      res,
 		TotalItems: totalItems,
-		Page:       1,
-		PerPage:    5,
+		Page:       filter.Offset,
+		PerPage:    filter.Limit,
 	}
 
 	utils.SuccessWithData(c, http.StatusOK, data, "success get all todos")
