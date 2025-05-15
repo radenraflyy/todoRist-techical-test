@@ -7,6 +7,11 @@ import (
 	authrouter "todorist/server/router/auth_router"
 	todosrouter "todorist/server/router/todos_router"
 
+	_ "todorist/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,4 +36,6 @@ func SetupRoutes(c SetupRoutesConfig) {
 
 	authrouter.Init(apiV1, c.DB)
 	todosrouter.Init(apiV1, c.DB)
+	// route untuk Swagger UI
+	c.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

@@ -42,4 +42,23 @@ type (
 		UserId       string `json:"userId"`
 		Name         string `json:"name"`
 	}
+
+	SuccessResponse struct {
+		Success    bool   `json:"success" example:"true"`
+		StatusCode int    `json:"statusCode" example:"200"`
+		Message    string `json:"message" example:"success"`
+	}
+
+	SuccessDataResponse struct {
+		Success    bool        `json:"success" example:"true"`
+		StatusCode int         `json:"statusCode" example:"200"`
+		Message    string      `json:"message" example:"success"`
+		Data       interface{} `json:"data"`
+	}
+
+	ErrorResponse struct {
+		Success    bool   `json:"success" example:"false"`
+		StatusCode int    `json:"statusCode" example:"400"`
+		Message    string `json:"message" example:"error message"`
+	}
 )

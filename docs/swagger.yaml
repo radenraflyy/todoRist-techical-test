@@ -1,0 +1,397 @@
+definitions:
+  auth.ErrorResponse:
+    properties:
+      message:
+        example: error message
+        type: string
+      statusCode:
+        example: 400
+        type: integer
+      success:
+        example: false
+        type: boolean
+    type: object
+  auth.GetUserModel:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      userId:
+        type: string
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.LoginResponse:
+    properties:
+      accessToken:
+        type: string
+      user:
+        $ref: '#/definitions/auth.GetUserModel'
+    type: object
+  auth.RefreshTokenResponse:
+    properties:
+      accessToken:
+        type: string
+      user:
+        $ref: '#/definitions/auth.GetUserModel'
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 6
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  auth.SuccessResponse:
+    properties:
+      message:
+        example: success
+        type: string
+      statusCode:
+        example: 200
+        type: integer
+      success:
+        example: true
+        type: boolean
+    type: object
+  exception.CustomException:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  todos.CreateCommentRequest:
+    properties:
+      comment:
+        type: string
+      todo_id:
+        type: string
+    required:
+    - comment
+    type: object
+  todos.CreateLabelRequest:
+    properties:
+      name:
+        type: string
+      user_id:
+        type: string
+    required:
+    - name
+    type: object
+  todos.CreateLabelResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  todos.CreateTodoRequest:
+    properties:
+      description:
+        type: string
+      due_date:
+        type: string
+      is_done:
+        type: boolean
+      label:
+        items:
+          type: string
+        type: array
+      priority:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    required:
+    - description
+    - due_date
+    - title
+    type: object
+  todos.GetAllLabelsResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  todos.GetAllTodosResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: string
+      is_done:
+        type: boolean
+      priority:
+        type: string
+      title:
+        type: string
+    type: object
+  todos.UpdateTodoRequest:
+    properties:
+      id:
+        items:
+          type: string
+        type: array
+      is_done:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password, returns tokens
+      parameters:
+      - description: Login user payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success login response with tokens
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "422":
+          description: Validation errors
+          schema:
+            $ref: '#/definitions/exception.CustomException'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    get:
+      description: Logout user by clearing refresh token cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success logout response
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh-token:
+    get:
+      description: Get new access token using refresh token cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access token response
+          schema:
+            $ref: '#/definitions/auth.RefreshTokenResponse'
+        "401":
+          description: Unauthorized or invalid token
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: Register user payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success response
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "422":
+          description: Validation errors
+          schema:
+            $ref: '#/definitions/exception.CustomException'
+      summary: Register a new user
+      tags:
+      - auth
+  /todos:
+    patch:
+      consumes:
+      - application/json
+      description: Menandai satu atau banyak todo sebagai done/undone
+      parameters:
+      - description: Payload update status todo
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/todos.UpdateTodoRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Update status todo
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Endpoint ini membuat satu todo baru
+      parameters:
+      - description: Payload untuk membuat todo
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/todos.CreateTodoRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Buat todo baru
+      tags:
+      - todos
+  /todos/{todo_id}:
+    delete:
+      description: Menghapus satu todo berdasarkan ID
+      parameters:
+      - description: ID todo yang akan dihapus
+        in: path
+        name: todo_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Hapus todo
+      tags:
+      - todos
+  /todos/comment/{todo_id}:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint ini menambahkan komentar pada todo tertentu
+      parameters:
+      - description: ID todo
+        in: path
+        name: todo_id
+        required: true
+        type: string
+      - description: Payload komentar
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/todos.CreateCommentRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Tambah komentar ke todo
+      tags:
+      - todos
+  /todos/label:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint ini membuat satu label baru untuk todo
+      parameters:
+      - description: Payload untuk membuat label
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/todos.CreateLabelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/todos.CreateLabelResponse'
+      summary: Buat label baru
+      tags:
+      - todos
+  /todos/list-label:
+    get:
+      description: Mengambil semua label untuk user yang sedang login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/todos.GetAllLabelsResponse'
+      summary: Daftar semua label
+      tags:
+      - todos
+  /todos/list-todo:
+    get:
+      description: Mengambil daftar todo — sudah support pagination, search, filter
+      parameters:
+      - description: Limit per halaman
+        in: query
+        name: limit
+        type: integer
+      - description: Halaman (1-based)
+        in: query
+        name: offset
+        type: integer
+      - description: Keyword pencarian
+        in: query
+        name: search
+        type: string
+      - description: Filter status (true/false)
+        in: query
+        name: status
+        type: string
+      - description: Filter prioritas
+        in: query
+        name: priority
+        type: string
+      - description: Filter tanggal (YYYY-MM-DD)
+        in: query
+        name: due_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/todos.GetAllTodosResponse'
+      summary: Daftar semua todo
+      tags:
+      - todos
+swagger: "2.0"

@@ -37,6 +37,16 @@ func NewAuthController(authRouter *gin.RouterGroup, useCase UseCase) AuthControl
 	return controller
 }
 
+// RegisterUser godoc
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body RegisterRequest true "Register user payload"
+// @Success 201 {object} auth.SuccessResponse "Success response"
+// @Failure 422 {object} exception.CustomException "Validation errors"
+// @Router /auth/register [post]
 func (ac *authController) RegisterUser(c *gin.Context) {
 	var user RegisterRequest
 
@@ -71,6 +81,18 @@ func (ac *authController) RegisterUser(c *gin.Context) {
 	utils.SuccessWithoutData(c, http.StatusCreated, "success create users")
 }
 
+
+// LoginUser godoc
+// @Summary Login user
+// @Description Login with email and password, returns tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body LoginRequest true "Login user payload"
+// @Success 200 {object} LoginResponse "Success login response with tokens"
+// @Failure 422 {object} exception.CustomException "Validation errors"
+// @Failure 500 {object} auth.ErrorResponse "Internal error"
+// @Router /auth/login [post]
 func (ac *authController) LoginUser(c *gin.Context) {
 	var user LoginRequest
 
@@ -102,12 +124,27 @@ func (ac *authController) LoginUser(c *gin.Context) {
 	utils.SuccessWithData(c, http.StatusOK, res, "success login!")
 }
 
+// LogoutUsers godoc
+// @Summary Logout user
+// @Description Logout user by clearing refresh token cookie
+// @Tags auth
+// @Produce json
+// @Success 200 {object} auth.SuccessResponse "Success logout response"
+// @Router /auth/logout [get]
 func (ac *authController) LogoutUsers(c *gin.Context) {
 	c.SetCookie("refresh_token", "", -1, "/", "", os.Getenv("GO_ENV") == "production", true)
 
 	utils.SuccessWithoutData(c, http.StatusOK, "success logout!")
 }
 
+// RefreshToken godoc
+// @Summary Refresh access token
+// @Description Get new access token using refresh token cookie
+// @Tags auth
+// @Produce json
+// @Success 200 {object} RefreshTokenResponse "New access token response"
+// @Failure 401 {object} auth.ErrorResponse "Unauthorized or invalid token"
+// @Router /auth/refresh-token [get]
 func (ac *authController) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
