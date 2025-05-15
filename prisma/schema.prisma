@@ -36,14 +36,13 @@ model users {
 model todos {
   id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id     String               @db.Uuid
-  label_id    String?              @db.Uuid
   title       String               @db.VarChar()
   description String?              @db.Text
   due_date    DateTime?            @db.Timestamp(6)
   is_done     Boolean              @default(false)
   priority    EnumPriorityTodoType
   user        users                @relation(fields: [user_id], references: [id])
-  label_todos label_todos?         @relation(fields: [label_id], references: [id])
+  label_ids   todo_label_pivot[]
 
   created_at DateTime    @default(now()) @db.Timestamp(6)
   updated_at DateTime    @default(now()) @db.Timestamp(6)
@@ -51,23 +50,24 @@ model todos {
   created_by String?     @db.Uuid
   updated_by String?     @db.Uuid
   deleted_by String?     @db.Uuid
-  sub_tasks  sub_tasks[]
   comments   comments[]
 }
 
-model sub_tasks {
-  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  label_id    String? @db.Uuid
-  title       String  @db.VarChar()
-  description String? @db.Text
-  is_done     Boolean @default(false)
-  todo_id     String  @db.Uuid
-  todo        todos   @relation(fields: [todo_id], references: [id])
+model todo_label_pivot {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  todo_id     String    @db.Uuid
+  label_id    String    @db.Uuid
 
-  created_at DateTime  @default(now()) @db.Timestamp(6)
-  updated_at DateTime  @default(now()) @db.Timestamp(6)
-  deleted_at DateTime? @db.Timestamp(6)
+  todo        todos         @relation(fields: [todo_id], references: [id])
+  label       label_todos   @relation(fields: [label_id], references: [id])
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
+  created_by  String?   @db.Uuid
+  updated_by  String?   @db.Uuid
+  deleted_by  String?   @db.Uuid
 }
+
 
 model comments {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -87,6 +87,7 @@ model label_todos {
   name    String @db.VarChar()
   user_id String @db.Uuid
   user    users  @relation(fields: [user_id], references: [id])
+  label_ids   todo_label_pivot[]
 
   created_at DateTime  @default(now()) @db.Timestamp(6)
   updated_at DateTime  @default(now()) @db.Timestamp(6)
@@ -94,7 +95,6 @@ model label_todos {
   created_by String?   @db.Uuid
   updated_by String?   @db.Uuid
   deleted_by String?   @db.Uuid
-  todos      todos[]
 }
 
 enum EnumPriorityTodoType {
