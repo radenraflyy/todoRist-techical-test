@@ -6,8 +6,8 @@ type (
 		Description string `json:"description" db:"description" validate:"required"`
 		DueDate     string `json:"due_date" db:"due_date" validate:"required"`
 		IsDone      bool   `json:"is_done" db:"is_done"`
-		LabelId     string `json:"label_id" db:"label_id"`
 		Priority    string `json:"priority" db:"priority"`
+		LabelId     string `json:"label"`
 		UserId      string `json:"user_id" db:"user_id"`
 	}
 
