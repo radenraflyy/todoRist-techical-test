@@ -7,6 +7,7 @@ type Usecase interface {
 	CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error)
 	CreateComment(data CreateCommentRequest, todoId string) error
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
+	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
 }
 
 type useCase struct {
@@ -45,6 +46,14 @@ func (u *useCase) CreateTodo(data CreateTodoRequest) error {
 
 func (u *useCase) GetAllLabels(userId string) ([]GetAllLabelsResponse, error) {
 	resp, err := u.repo.GetAllLabels(userId)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (u *useCase) GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error) {
+	resp, err := u.repo.GetAllTodos(userId, filter)
 	if err != nil {
 		return nil, err
 	}

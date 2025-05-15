@@ -1,7 +1,9 @@
 package todos
 
 import (
+	"fmt"
 	"log"
+	"strings"
 	"todorist/config"
 )
 
@@ -10,6 +12,7 @@ type TodosRepository interface {
 	CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error)
 	CreateComment(data CreateCommentRequest, todoId string) error
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
+	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
 }
 
 type todosRepository struct {
@@ -79,6 +82,77 @@ func (t *todosRepository) GetAllLabels(userId string) ([]GetAllLabelsResponse, e
 	query := `SELECT id, name FROM label_todos WHERE user_id = $<user_id>`
 	if err := t.db.SelectMany(query, &data, map[string]any{"user_id": userId}); err != nil {
 		log.Println("error getting all labels:", err)
+	}
+
+	return data, nil
+}
+
+func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([]GetAllTodosResponse, error) {
+	limit := q.Limit
+	if limit <= 0 {
+		limit = 5
+	}
+	offset := (q.Offset - 1) * limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	allowedSortBy := map[string]bool{"title": true, "due_date": true, "created_at": true, "priority": true}
+	allowedOrder := map[string]bool{"asc": true, "desc": true}
+
+	orderBy := q.OrderBy
+	if !allowedSortBy[orderBy] {
+		orderBy = "created_at"
+	}
+
+	order := q.Order
+	if !allowedOrder[order] {
+		order = "desc"
+	}
+
+	search := q.Search
+
+	wherearr := make([]string, 0)
+	wherearr = append(wherearr, "todos.user_id = $<user_id>")
+	wherearr = append(wherearr, "todos.is_done = false")
+	wherearr = append(wherearr, "todos.deleted_at IS NULL")
+
+	if search != "" {
+		wherearr = append(wherearr, `(LOWER(todos.title) LIKE LOWER($<search>) OR LOWER(todos.description) LIKE LOWER($<search>))`)
+	}
+
+	wherestr := strings.Join(wherearr, " AND ")
+
+	query := fmt.Sprintf(`
+	SELECT
+		COUNT(*) OVER () AS count,
+		todos.title,
+		todos.description,
+		todos.created_at,
+		todos.due_date,
+		todos.priority,
+		todos.is_done
+	FROM todos
+	WHERE %s
+	ORDER BY $<orderBy:raw> $<order:raw> NULLS LAST, todos.created_at DESC
+	LIMIT $<limit>
+	OFFSET $<offset>
+	`, wherestr)
+
+	params := map[string]interface{}{
+		"user_id": userId,
+		"search":  "%" + search + "%",
+		"orderBy": orderBy,
+		"order":   order,
+		"limit":   limit,
+		"offset":  offset,
+	}
+
+	data := make([]GetAllTodosResponse, 0)
+	err := t.db.SelectMany(query, &data, params)
+	if err != nil {
+		log.Println("error getting all todos:", err)
+		return nil, err
 	}
 
 	return data, nil

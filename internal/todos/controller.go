@@ -17,6 +17,7 @@ type TodosController interface {
 	CreateLabel(c *gin.Context)
 	CreateComment(c *gin.Context)
 	GetAllLabels(c *gin.Context)
+	GetAllTodos(c *gin.Context)
 }
 
 type todosController struct {
@@ -31,6 +32,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.POST("/label", controller.CreateLabel)
 	todoRouter.POST("/comment/:todo_id", controller.CreateComment)
 	todoRouter.GET("/list-label", controller.GetAllLabels)
+	todoRouter.GET("/list-todo", controller.GetAllTodos)
 	return controller
 }
 
@@ -150,4 +152,62 @@ func (t *todosController) GetAllLabels(c *gin.Context) {
 	}
 
 	utils.SuccessWithData(c, http.StatusOK, res, "success get all labels")
+}
+
+func (t *todosController) GetAllTodos(c *gin.Context) {
+	userId, ok := c.Get("userId")
+	if !ok {
+		c.Error(&exception.CustomException{
+			Message: "user id not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+
+	var filter FilteringTodosRequest
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameters"})
+		return
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = 5
+	}
+	if filter.Offset == 0 {
+		filter.Offset = 1
+	}
+	if filter.OrderBy == "" {
+		filter.OrderBy = "created_at"
+	}
+	if filter.Order == "" {
+		filter.Order = "desc"
+	}
+
+	res, err := t.useCase.GetAllTodos(userId.(string), filter)
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	totalItems := 0
+	if len(res) > 0 {
+		totalItems = res[0].Count
+	}
+
+	data := struct {
+		Items      []GetAllTodosResponse `json:"items"`
+		TotalItems int                   `json:"totalItems"`
+		Page       int                   `json:"page"`
+		PerPage    int                   `json:"perPage"`
+	}{
+		Items:      res,
+		TotalItems: totalItems,
+		Page:       1,
+		PerPage:    5,
+	}
+
+	utils.SuccessWithData(c, http.StatusOK, data, "success get all todos")
 }

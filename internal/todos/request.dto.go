@@ -20,4 +20,12 @@ type (
 		TodoId  string `json:"todo_id" db:"todo_id"`
 		Comment string `json:"comment" db:"comment" validate:"required"`
 	}
+
+	FilteringTodosRequest struct {
+		OrderBy string `form:"order_by"`
+		Order   string `form:"order"`
+		Search  string `form:"search"`
+		Limit   int    `form:"limit"`
+		Offset  int    `form:"offset"`
+	}
 )
