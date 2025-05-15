@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -113,6 +114,7 @@ func (ac *authController) RefreshToken(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	log.Println("refresh token:", refreshToken)
 
 	res, err := ac.useCase.RefreshToken(refreshToken)
 	if err != nil {

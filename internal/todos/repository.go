@@ -7,8 +7,9 @@ import (
 
 type TodosRepository interface {
 	CreateTodo(data CreateTodoRequest) error
-	CreateLabel(data CreateLabelRequest) error
+	CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error)
 	CreateComment(data CreateCommentRequest, todoId string) error
+	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 }
 
 type todosRepository struct {
@@ -32,15 +33,22 @@ func (t *todosRepository) CreateTodo(data CreateTodoRequest) error {
 			return err
 		}
 
-		dataTablePivot := struct {
+		var dataTablePivot []struct {
 			TodoId  string `db:"todo_id"`
 			LabelId string `db:"label_id"`
-		}{
-			TodoId:  responseTodo.Id,
-			LabelId: data.LabelId,
 		}
 
-		if err := t.db.InsertOne(dataTablePivot, "todo_label_pivot", nil); err != nil {
+		for _, labelId := range data.LabelIds {
+			dataTablePivot = append(dataTablePivot, struct {
+				TodoId  string `db:"todo_id"`
+				LabelId string `db:"label_id"`
+			}{
+				TodoId:  responseTodo.Id,
+				LabelId: labelId,
+			})
+		}
+
+		if err := t.db.InsertMany(dataTablePivot, "todo_label_pivot", nil); err != nil {
 			log.Println("error inserting pivot:", err)
 			return err
 		}
@@ -49,12 +57,13 @@ func (t *todosRepository) CreateTodo(data CreateTodoRequest) error {
 	})
 }
 
-func (t *todosRepository) CreateLabel(data CreateLabelRequest) error {
+func (t *todosRepository) CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error) {
 	data.UserId = t.db.GetUserId()
-	if err := t.db.InsertOne(data, "label_todos", nil); err != nil {
-		return err
+	var CreateLabelResponse CreateLabelResponse
+	if err := t.db.InsertOne(data, "label_todos", &CreateLabelResponse); err != nil {
+		return CreateLabelResponse, err
 	}
-	return nil
+	return CreateLabelResponse, nil
 }
 
 func (t *todosRepository) CreateComment(data CreateCommentRequest, todoId string) error {
@@ -63,4 +72,14 @@ func (t *todosRepository) CreateComment(data CreateCommentRequest, todoId string
 		return err
 	}
 	return nil
+}
+
+func (t *todosRepository) GetAllLabels(userId string) ([]GetAllLabelsResponse, error) {
+	data := make([]GetAllLabelsResponse, 0)
+	query := `SELECT id, name FROM label_todos WHERE user_id = $<user_id>`
+	if err := t.db.SelectMany(query, &data, map[string]any{"user_id": userId}); err != nil {
+		log.Println("error getting all labels:", err)
+	}
+
+	return data, nil
 }

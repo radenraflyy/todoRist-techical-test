@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 	"todorist/config"
+	"todorist/pkg/customlog"
 	"todorist/pkg/exception"
 	"todorist/pkg/jwttoken"
 	verifypassword "todorist/pkg/verify-password"
@@ -121,7 +122,7 @@ func (us *useCase) RefreshToken(refreshToken string) (*RefreshTokenResponse, err
 	if err != nil {
 		return nil, ErrTokenExpired
 	}
-
+	customlog.PrintJSON(user, "user AING")
 	existingRefreshToken, err := us.repo.GetRefreshToken(user.UserId)
 	if err != nil {
 		return nil, err

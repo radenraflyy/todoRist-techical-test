@@ -16,6 +16,7 @@ type TodosController interface {
 	CreateTodo(c *gin.Context)
 	CreateLabel(c *gin.Context)
 	CreateComment(c *gin.Context)
+	GetAllLabels(c *gin.Context)
 }
 
 type todosController struct {
@@ -29,6 +30,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.POST("", controller.CreateTodo)
 	todoRouter.POST("/label", controller.CreateLabel)
 	todoRouter.POST("/comment/:todo_id", controller.CreateComment)
+	todoRouter.GET("/list-label", controller.GetAllLabels)
 	return controller
 }
 
@@ -85,7 +87,7 @@ func (t *todosController) CreateLabel(c *gin.Context) {
 		return
 	}
 
-	err := t.useCase.CreateLabel(payload)
+	resp, err := t.useCase.CreateLabel(payload)
 	if err != nil {
 		c.Error(&exception.CustomException{
 			Message: fmt.Sprintf("%v", err.Error()),
@@ -94,7 +96,7 @@ func (t *todosController) CreateLabel(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessWithoutData(c, http.StatusCreated, "success create label")
+	utils.SuccessWithData(c, http.StatusCreated, resp, "success create label")
 }
 
 func (t *todosController) CreateTodo(c *gin.Context) {
@@ -127,4 +129,25 @@ func (t *todosController) CreateTodo(c *gin.Context) {
 	}
 
 	utils.SuccessWithoutData(c, http.StatusCreated, "success create todo")
+}
+
+func (t *todosController) GetAllLabels(c *gin.Context) {
+	userId, ok := c.Get("userId")
+	if !ok {
+		c.Error(&exception.CustomException{
+			Message: "user id not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	res, err := t.useCase.GetAllLabels(userId.(string))
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	utils.SuccessWithData(c, http.StatusOK, res, "success get all labels")
 }

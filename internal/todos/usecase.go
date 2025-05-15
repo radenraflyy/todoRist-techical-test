@@ -4,8 +4,9 @@ import "todorist/config"
 
 type Usecase interface {
 	CreateTodo(data CreateTodoRequest) error
-	CreateLabel(data CreateLabelRequest) error
+	CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error)
 	CreateComment(data CreateCommentRequest, todoId string) error
+	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 }
 
 type useCase struct {
@@ -27,11 +28,12 @@ func (u *useCase) CreateComment(data CreateCommentRequest, todoId string) error 
 	return nil
 }
 
-func (u *useCase) CreateLabel(data CreateLabelRequest) error {
-	if err := u.repo.CreateLabel(data); err != nil {
-		return err
+func (u *useCase) CreateLabel(data CreateLabelRequest) (CreateLabelResponse, error) {
+	resp, err := u.repo.CreateLabel(data)
+	if err != nil {
+		return resp, err
 	}
-	return nil
+	return resp, nil
 }
 
 func (u *useCase) CreateTodo(data CreateTodoRequest) error {
@@ -39,4 +41,12 @@ func (u *useCase) CreateTodo(data CreateTodoRequest) error {
 		return err
 	}
 	return nil
+}
+
+func (u *useCase) GetAllLabels(userId string) ([]GetAllLabelsResponse, error) {
+	resp, err := u.repo.GetAllLabels(userId)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
