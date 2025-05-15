@@ -20,6 +20,7 @@ type TodosController interface {
 	GetAllLabels(c *gin.Context)
 	GetAllTodos(c *gin.Context)
 	UpdateTodo(c *gin.Context)
+	DeleteTodo(c *gin.Context)
 }
 
 type todosController struct {
@@ -36,6 +37,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.GET("/list-label", controller.GetAllLabels)
 	todoRouter.GET("/list-todo", controller.GetAllTodos)
 	todoRouter.PATCH("", controller.UpdateTodo)
+	todoRouter.DELETE("/:todo_id", controller.DeleteTodo)
 	return controller
 }
 
@@ -248,4 +250,18 @@ func (t *todosController) UpdateTodo(c *gin.Context) {
 	}
 
 	utils.SuccessWithoutData(c, http.StatusOK, "success update todo")
+}
+
+func (t *todosController) DeleteTodo(c *gin.Context) {
+	todoId := c.Param("todo_id")
+	err := t.useCase.DeleteTodo(todoId)
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	utils.SuccessWithoutData(c, http.StatusOK, "success delete todo")
 }

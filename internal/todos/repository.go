@@ -15,6 +15,7 @@ type TodosRepository interface {
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
 	UpdateTodoMany(data UpdateTodoRequest) error
+	DeleteTodo(todoId string) error
 }
 
 type todosRepository struct {
@@ -188,4 +189,8 @@ func (t *todosRepository) UpdateTodoMany(data UpdateTodoRequest) error {
 		}
 		return nil
 	})
+}
+
+func (t *todosRepository) DeleteTodo(todoId string) error {
+	return t.db.SoftDelete("todos", "id = $<id>", map[string]any{"id": todoId}, nil)
 }

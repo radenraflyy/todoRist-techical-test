@@ -11,6 +11,7 @@ type Usecase interface {
 	GetAllLabels(userId string) ([]GetAllLabelsResponse, error)
 	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
 	UpdateTodo(data UpdateTodoRequest) error
+	DeleteTodo(todoId string) error
 }
 
 type useCase struct {
@@ -65,6 +66,13 @@ func (u *useCase) GetAllTodos(userId string, filter FilteringTodosRequest) ([]Ge
 
 func (t *useCase) UpdateTodo(data UpdateTodoRequest) error {
 	if err := t.repo.UpdateTodoMany(data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *useCase) DeleteTodo(todoId string) error {
+	if err := u.repo.DeleteTodo(todoId); err != nil {
 		return err
 	}
 	return nil
