@@ -36,24 +36,26 @@ func (t *todosRepository) CreateTodo(data CreateTodoRequest) error {
 			return err
 		}
 
-		var dataTablePivot []struct {
-			TodoId  string `db:"todo_id"`
-			LabelId string `db:"label_id"`
-		}
-
-		for _, labelId := range data.LabelIds {
-			dataTablePivot = append(dataTablePivot, struct {
+		if len(data.LabelIds) > 0 {
+			var dataTablePivot []struct {
 				TodoId  string `db:"todo_id"`
 				LabelId string `db:"label_id"`
-			}{
-				TodoId:  responseTodo.Id,
-				LabelId: labelId,
-			})
-		}
+			}
 
-		if err := t.db.InsertMany(dataTablePivot, "todo_label_pivot", nil); err != nil {
-			log.Println("error inserting pivot:", err)
-			return err
+			for _, labelId := range data.LabelIds {
+				dataTablePivot = append(dataTablePivot, struct {
+					TodoId  string `db:"todo_id"`
+					LabelId string `db:"label_id"`
+				}{
+					TodoId:  responseTodo.Id,
+					LabelId: labelId,
+				})
+			}
+
+			if err := t.db.InsertMany(dataTablePivot, "todo_label_pivot", nil); err != nil {
+				log.Println("error inserting pivot:", err)
+				return err
+			}
 		}
 
 		return nil
@@ -136,7 +138,7 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 		todos.is_done
 	FROM todos
 	WHERE %s
-	ORDER BY $<orderBy:raw> $<order:raw> NULLS LAST, todos.created_at DESC
+	ORDER BY $<orderBy:raw> $<order:raw> NULLS LAST, todos.created_at ASC
 	LIMIT $<limit>
 	OFFSET $<offset>
 	`, wherestr)
