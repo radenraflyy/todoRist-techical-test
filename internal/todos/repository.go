@@ -88,6 +88,7 @@ func (t *todosRepository) GetAllLabels(userId string) ([]GetAllLabelsResponse, e
 }
 
 func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([]GetAllTodosResponse, error) {
+	data := make([]GetAllTodosResponse, 0)
 	limit := q.Limit
 	if limit <= 0 {
 		limit = 5
@@ -148,7 +149,6 @@ func (t *todosRepository) GetAllTodos(userId string, q FilteringTodosRequest) ([
 		"offset":  offset,
 	}
 
-	data := make([]GetAllTodosResponse, 0)
 	err := t.db.SelectMany(query, &data, params)
 	if err != nil {
 		log.Println("error getting all todos:", err)
