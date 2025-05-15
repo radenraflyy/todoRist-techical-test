@@ -1,27 +1,5 @@
+# Environment files
 .env
-
-*.exe
-*.dll
-*.so
-*.dylib
-
-*.out
-
-/bin/
-/build/
-/dist/
-
-/vendor/
-
-/pkg/mod/
-
-*.tmp
-*.bak
+# Tmp and cache files
+tmp/
 *.log
-
-.vscode/
-.idea/
-
-.DS_Store
-
-*.swp
