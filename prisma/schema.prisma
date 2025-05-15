@@ -21,7 +21,6 @@ model users {
   name            String        @db.VarChar()
   email           String        @db.VarChar()
   password        String        @db.VarChar()
-  profile_picture Json?
   refresh_token   String?       @unique
   created_at      DateTime      @default(now()) @db.Timestamp(6)
   updated_at      DateTime      @default(now()) @db.Timestamp(6)

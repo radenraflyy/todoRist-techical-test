@@ -7,11 +7,10 @@ import (
 )
 
 type UserClaims struct {
-	UserId          string `json:"user_id"`
-	Name            string `json:"name"`
-	Email           string `json:"email"`
-	ProfilePicuture string `json:"profile_picture"`
-	Expired         *int64 `json:"exp"`
+	UserId  string `json:"user_id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Expired *int64 `json:"exp"`
 	jwt.RegisteredClaims
 }
 

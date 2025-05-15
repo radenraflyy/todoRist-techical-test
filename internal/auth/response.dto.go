@@ -9,12 +9,11 @@ var (
 
 type (
 	GetUserModel struct {
-		UserId         string  `json:"userId" db:"user_id"`
-		Name           string  `json:"name" db:"name"`
-		ProfilePicture *string `json:"profile_picture,omitempty" db:"profile_picture"`
-		Email          string  `json:"email" db:"email"`
-		Password       string  `json:"-" db:"password"`
-		RefreshToken   string  `json:"-" db:"refresh_token,omitempty"`
+		UserId       string `json:"userId" db:"user_id"`
+		Name         string `json:"name" db:"name"`
+		Email        string `json:"email" db:"email"`
+		Password     string `json:"-" db:"password"`
+		RefreshToken string `json:"-" db:"refresh_token,omitempty"`
 	}
 
 	LoginResponse struct {

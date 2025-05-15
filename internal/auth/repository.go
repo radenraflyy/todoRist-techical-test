@@ -24,7 +24,7 @@ func NewAuthRepository(db *config.DB) AuthRepository {
 
 func (r *authRepository) GetUserByEmail(email string) (GetUserModel, error) {
 	var data GetUserModel
-	q := `SELECT id AS "user_id", name, email, profile_picture, password FROM "users" WHERE email = $<email>`
+	q := `SELECT id AS "user_id", name, email, password FROM "users" WHERE email = $<email>`
 	if err := r.db.SelectOne(q, &data, map[string]any{"email": email}); err != nil {
 		return data, err
 	}

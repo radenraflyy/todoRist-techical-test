@@ -77,10 +77,9 @@ func (us *useCase) LoginUser(data LoginRequest) (LoginResponse, error) {
 
 func (us *useCase) GenerateToken(user GetUserModel) (*GenerateTokenResponse, error) {
 	claims := map[string]interface{}{
-		"user_id":         user.UserId,
-		"name":            user.Name,
-		"email":           user.Email,
-		"profile_picture": user.ProfilePicture,
+		"user_id": user.UserId,
+		"name":    user.Name,
+		"email":   user.Email,
 	}
 
 	accesToken, err := jwttoken.CreateToken(expireAccessToken, claims)
@@ -143,10 +142,9 @@ func (us *useCase) RefreshToken(refreshToken string) (*RefreshTokenResponse, err
 	}
 
 	accessToken, err := jwttoken.CreateToken(expireAccessToken, map[string]interface{}{
-		"name":            user.Name,
-		"email":           user.Email,
-		"profile_picture": user.ProfilePicuture,
-		"user_id":         user.UserId,
+		"name":    user.Name,
+		"email":   user.Email,
+		"user_id": user.UserId,
 	})
 
 	if err != nil {
