@@ -16,6 +16,7 @@ type TodosRepository interface {
 	GetAllTodos(userId string, filter FilteringTodosRequest) ([]GetAllTodosResponse, error)
 	UpdateTodoMany(data UpdateTodoRequest) error
 	DeleteTodo(todoId string) error
+	GetDetailTodo(todoId string) (GetDetailTodosResponse, error)
 }
 
 type todosRepository struct {
@@ -193,4 +194,45 @@ func (t *todosRepository) UpdateTodoMany(data UpdateTodoRequest) error {
 
 func (t *todosRepository) DeleteTodo(todoId string) error {
 	return t.db.SoftDelete("todos", "id = $<id>", map[string]any{"id": todoId}, nil)
+}
+
+func (r *todosRepository) GetDetailTodo(todoId string) (GetDetailTodosResponse, error) {
+	var resp GetDetailTodosResponse
+	baseQuery := `
+		SELECT u.name,
+			t.title, t.description,
+			t.due_date, t.priority, t.is_done 
+		FROM todos t 
+		JOIN users u ON u.id = t.user_id
+		WHERE t.id = $<id>
+	`
+	if err := r.db.SelectOne(baseQuery, &resp, map[string]any{"id": todoId}); err != nil {
+		return resp, err
+	}
+
+	var labels []ResponseLable
+	labelQuery := `
+		SELECT lt.name
+		FROM todo_label_pivot tlp
+		JOIN label_todos lt ON lt.id = tlp.label_id
+		WHERE tlp.todo_id = $<todo_id>
+	`
+	if err := r.db.SelectMany(labelQuery, &labels, map[string]any{"todo_id": todoId}); err != nil {
+		return resp, err
+	}
+	resp.ResponseLable = labels
+
+	var comments []CommentResponse
+	commentQuery := `
+		SELECT comment, created_at
+		FROM comments
+		WHERE todo_id = $<todo_id>
+		ORDER BY created_at
+	`
+	if err := r.db.SelectMany(commentQuery, &comments, map[string]any{"todo_id": todoId}); err != nil {
+		return resp, err
+	}
+	resp.CommentResponse = comments
+
+	return resp, nil
 }

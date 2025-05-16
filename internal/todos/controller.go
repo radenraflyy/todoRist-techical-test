@@ -22,6 +22,7 @@ type TodosController interface {
 	GetAllTodos(c *gin.Context)
 	UpdateTodo(c *gin.Context)
 	DeleteTodo(c *gin.Context)
+	GetDetailTodo(c *gin.Context)
 }
 
 type todosController struct {
@@ -35,6 +36,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.POST("", controller.CreateTodo)
 	todoRouter.POST("/label", controller.CreateLabel)
 	todoRouter.POST("/comment/:todo_id", controller.CreateComment)
+	todoRouter.GET("/:todo_id", controller.GetDetailTodo)
 	todoRouter.GET("/list-label", controller.GetAllLabels)
 	todoRouter.GET("/list-todo", controller.GetAllTodos)
 	todoRouter.PATCH("", controller.UpdateTodo)
@@ -326,4 +328,26 @@ func (t *todosController) DeleteTodo(c *gin.Context) {
 	}
 
 	utils.SuccessWithoutData(c, http.StatusOK, "success delete todo")
+}
+
+// GetDetailTodo godoc
+// @Summary     Detail todo
+// @Description Endpoint ini menampilkan detail todo
+// @Tags        todos
+// @Accept      json
+// @Produce     json
+// @Success     201      {object} todos.GetDetailTodosResponse
+// @Router      /todos/{todo_id} [get]
+func (t *todosController) GetDetailTodo(c *gin.Context) {
+	todoId := c.Param("todo_id")
+	res, err := t.useCase.GetDetailTodo(todoId)
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	utils.SuccessWithData(c, http.StatusOK, res, "success get detail todo")
 }
