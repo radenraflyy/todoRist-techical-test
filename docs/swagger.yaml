@@ -78,6 +78,13 @@ definitions:
       message:
         type: string
     type: object
+  todos.CommentResponse:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+    type: object
   todos.CreateCommentRequest:
     properties:
       comment:
@@ -145,6 +152,53 @@ definitions:
         type: string
       is_done:
         type: boolean
+      priority:
+        type: string
+      title:
+        type: string
+    type: object
+  todos.GetDetailTodosResponse:
+    properties:
+      comment:
+        items:
+          $ref: '#/definitions/todos.CommentResponse'
+        type: array
+      description:
+        type: string
+      due_date:
+        type: string
+      is_done:
+        type: boolean
+      label:
+        items:
+          $ref: '#/definitions/todos.ResponseLable'
+        type: array
+      name:
+        type: string
+      priority:
+        type: string
+      title:
+        type: string
+    type: object
+  todos.ResponseLable:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  todos.UpdateDetailTodo:
+    properties:
+      description:
+        type: string
+      due_date:
+        type: string
+      is_done:
+        type: boolean
+      label:
+        items:
+          type: string
+        type: array
       priority:
         type: string
       title:
@@ -296,6 +350,37 @@ paths:
       - application/json
       responses: {}
       summary: Hapus todo
+      tags:
+      - todos
+    get:
+      consumes:
+      - application/json
+      description: Endpoint ini menampilkan detail todo
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/todos.GetDetailTodosResponse'
+      summary: Detail todo
+      tags:
+      - todos
+    patch:
+      consumes:
+      - application/json
+      description: Mengubah list detail todo
+      parameters:
+      - description: Payload update detail todo
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/todos.UpdateDetailTodo'
+      produces:
+      - application/json
+      responses: {}
+      summary: Update detail todo
       tags:
       - todos
   /todos/comment/{todo_id}:

@@ -353,6 +353,14 @@ func (t *todosController) GetDetailTodo(c *gin.Context) {
 	utils.SuccessWithData(c, http.StatusOK, res, "success get detail todo")
 }
 
+// UpdateTaskTodo godoc
+// @Summary     Update detail todo
+// @Description Mengubah list detail todo
+// @Tags        todos
+// @Accept      json
+// @Produce     json
+// @Param       payload  body    todos.UpdateDetailTodo  true  "Payload update detail todo"
+// @Router      /todos/{todo_id} [PATCH]
 func (t *todosController) UpdateTaskTodo(c *gin.Context) {
 	var payload UpdateDetailTodo
 	todoId := c.Param("todo_id")

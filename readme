@@ -1,0 +1,2 @@
+Run generate doc
+swag init -g .\server\router\main.go -o docs

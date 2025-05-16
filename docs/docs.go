@@ -346,6 +346,27 @@ const docTemplate = `{
             }
         },
         "/todos/{todo_id}": {
+            "get": {
+                "description": "Endpoint ini menampilkan detail todo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todos"
+                ],
+                "summary": "Detail todo",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/todos.GetDetailTodosResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "Menghapus satu todo berdasarkan ID",
                 "produces": [
@@ -362,6 +383,31 @@ const docTemplate = `{
                         "name": "todo_id",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {}
+            },
+            "patch": {
+                "description": "Mengubah list detail todo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "todos"
+                ],
+                "summary": "Update detail todo",
+                "parameters": [
+                    {
+                        "description": "Payload update detail todo",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/todos.UpdateDetailTodo"
+                        }
                     }
                 ],
                 "responses": {}
@@ -486,6 +532,17 @@ const docTemplate = `{
                 }
             }
         },
+        "todos.CommentResponse": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                }
+            }
+        },
         "todos.CreateCommentRequest": {
             "type": "object",
             "required": [
@@ -587,6 +644,78 @@ const docTemplate = `{
                 },
                 "is_done": {
                     "type": "boolean"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "todos.GetDetailTodosResponse": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/todos.CommentResponse"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "is_done": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/todos.ResponseLable"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "todos.ResponseLable": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "todos.UpdateDetailTodo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "is_done": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "priority": {
                     "type": "string"
