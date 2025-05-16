@@ -17,6 +17,7 @@ type TodosRepository interface {
 	UpdateTodoMany(data UpdateTodoRequest) error
 	DeleteTodo(todoId string) error
 	GetDetailTodo(todoId string) (GetDetailTodosResponse, error)
+	UpdateTaskTodo(todoId string, data UpdateDetailTodo) error
 }
 
 type todosRepository struct {
@@ -212,10 +213,10 @@ func (r *todosRepository) GetDetailTodo(todoId string) (GetDetailTodosResponse, 
 
 	var labels []ResponseLable
 	labelQuery := `
-		SELECT lt.name
+		SELECT lt.id, lt.name
 		FROM todo_label_pivot tlp
 		JOIN label_todos lt ON lt.id = tlp.label_id
-		WHERE tlp.todo_id = $<todo_id>
+		WHERE tlp.todo_id = $<todo_id> AND tlp.deleted_at IS NULL
 	`
 	if err := r.db.SelectMany(labelQuery, &labels, map[string]any{"todo_id": todoId}); err != nil {
 		return resp, err
@@ -235,4 +236,36 @@ func (r *todosRepository) GetDetailTodo(todoId string) (GetDetailTodosResponse, 
 	resp.CommentResponse = comments
 
 	return resp, nil
+}
+
+func (r *todosRepository) UpdateTaskTodo(todoId string, data UpdateDetailTodo) error {
+	return r.db.Tx(func(tx *config.DB) error {
+		if err := r.db.Update(data, "todos", "id = $<id>", map[string]any{"id": todoId}, nil); err != nil {
+			return err
+		}
+
+		if err := tx.SoftDelete("todo_label_pivot", "todo_id = $<todo_id>", map[string]any{"todo_id": todoId}, nil); err != nil {
+			return err
+		}
+		if len(data.LabelIds) > 0 {
+			var dataTablePivot []struct {
+				TodoId  string `db:"todo_id"`
+				LabelId string `db:"label_id"`
+			}
+			for _, label := range data.LabelIds {
+				dataTablePivot = append(dataTablePivot, struct {
+					TodoId  string `db:"todo_id"`
+					LabelId string `db:"label_id"`
+				}{
+					TodoId:  todoId,
+					LabelId: label,
+				})
+			}
+			if err := r.db.InsertMany(dataTablePivot, "todo_label_pivot", nil); err != nil {
+				log.Println("error inserting pivot:", err)
+				return err
+			}
+		}
+		return nil
+	})
 }

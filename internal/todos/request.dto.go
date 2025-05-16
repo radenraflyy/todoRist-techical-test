@@ -37,4 +37,13 @@ type (
 		TodoId []string `json:"id" db:"id"`
 		IsDone bool     `json:"is_done" db:"is_done"`
 	}
+
+	UpdateDetailTodo struct {
+		Title       string   `json:"title,omitempty" db:"title,omitempty"`
+		Description string   `json:"description,omitempty" db:"description,omitempty"`
+		DueDate     string   `json:"due_date,omitempty" db:"due_date,omitempty"`
+		IsDone      bool     `json:"is_done,omitempty" db:"is_done,omitempty"`
+		Priority    string   `json:"priority,omitempty" db:"priority,omitempty"`
+		LabelIds    []string `json:"label,omitempty"`
+	}
 )

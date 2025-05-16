@@ -23,6 +23,7 @@ type TodosController interface {
 	UpdateTodo(c *gin.Context)
 	DeleteTodo(c *gin.Context)
 	GetDetailTodo(c *gin.Context)
+	UpdateTaskTodo(c *gin.Context)
 }
 
 type todosController struct {
@@ -40,6 +41,7 @@ func NewTodosController(todoRouter *gin.RouterGroup, useCase Usecase) TodosContr
 	todoRouter.GET("/list-label", controller.GetAllLabels)
 	todoRouter.GET("/list-todo", controller.GetAllTodos)
 	todoRouter.PATCH("", controller.UpdateTodo)
+	todoRouter.PATCH("/detail/:todo_id", controller.UpdateTaskTodo)
 	todoRouter.DELETE("/:todo_id", controller.DeleteTodo)
 	return controller
 }
@@ -295,7 +297,6 @@ func (t *todosController) UpdateTodo(c *gin.Context) {
 		})
 		return
 	}
-	customlog.PrintJSON(payload, "payload AING")
 
 	err := t.useCase.UpdateTodo(payload)
 	if err != nil {
@@ -350,4 +351,26 @@ func (t *todosController) GetDetailTodo(c *gin.Context) {
 	}
 
 	utils.SuccessWithData(c, http.StatusOK, res, "success get detail todo")
+}
+
+func (t *todosController) UpdateTaskTodo(c *gin.Context) {
+	var payload UpdateDetailTodo
+	todoId := c.Param("todo_id")
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.Error(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	customlog.PrintJSON(payload, "payload AING")
+
+	err := t.useCase.UpdateTaskTodo(todoId, payload)
+	if err != nil {
+		c.Error(&exception.CustomException{
+			Message: fmt.Sprintf("%v", err.Error()),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
+
+	utils.SuccessWithoutData(c, http.StatusOK, "success update todo")
 }

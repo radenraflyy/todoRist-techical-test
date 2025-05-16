@@ -13,6 +13,7 @@ type Usecase interface {
 	UpdateTodo(data UpdateTodoRequest) error
 	DeleteTodo(todoId string) error
 	GetDetailTodo(todoId string) (GetDetailTodosResponse, error)
+	UpdateTaskTodo(todoId string, data UpdateDetailTodo) error
 }
 
 type useCase struct {
@@ -85,4 +86,11 @@ func (u *useCase) GetDetailTodo(todoId string) (GetDetailTodosResponse, error) {
 		return resp, err
 	}
 	return resp, nil
+}
+
+func (u *useCase) UpdateTaskTodo(todoId string, data UpdateDetailTodo) error {
+	if err := u.repo.UpdateTaskTodo(todoId, data); err != nil {
+		return err
+	}
+	return nil
 }
